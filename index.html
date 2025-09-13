@@ -1,0 +1,1341 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Indian Surgical Emergency Patients Generator</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      background-color: #f8fafc;
+      color: #334155;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 40px;
+      padding: 40px 0;
+      background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+      color: white;
+      border-radius: 16px;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 3rem;
+      font-weight: 700;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.2rem;
+      opacity: 0.9;
+      margin-bottom: 20px;
+    }
+
+    .version-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.2);
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .surgical-badge {
+      display: inline-block;
+      background: rgba(255, 255, 255, 0.15);
+      padding: 6px 12px;
+      border-radius: 15px;
+      font-size: 12px;
+      margin: 0 5px;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .controls {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      margin-bottom: 30px;
+    }
+
+    .controls h3 {
+      margin-bottom: 20px;
+      color: #1e293b;
+      font-size: 1.5rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #475569;
+    }
+
+    .form-group input,
+    .form-group select {
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: #dc2626;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn-primary {
+      background: #dc2626;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #b91c1c;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #64748b;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    .btn-export {
+      background: #059669;
+      color: white;
+    }
+
+    .btn-export:hover {
+      background: #047857;
+    }
+
+    .btn:disabled {
+      background: #cbd5e1;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .chart-container {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+
+    .chart-container h4 {
+      margin-bottom: 15px;
+      color: #1e293b;
+      text-align: center;
+    }
+
+    .search-filter {
+      background: white;
+      padding: 20px;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .search-grid {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 15px;
+      align-items: end;
+    }
+
+    .search-input {
+      padding: 12px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 16px;
+    }
+
+    .results {
+      background: white;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .results-header {
+      background: #f1f5f9;
+      padding: 20px;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .results-header h3 {
+      font-size: 1.25rem;
+      font-weight: 600;
+    }
+
+    .patient-count {
+      background: #dc2626;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .table-container {
+      overflow-x: auto;
+      max-height: 600px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e2e8f0;
+      white-space: nowrap;
+    }
+
+    th {
+      background: #f8fafc;
+      font-weight: 600;
+      color: #475569;
+      font-size: 14px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+
+    td {
+      font-size: 14px;
+    }
+
+    tr:hover {
+      background: #f8fafc;
+    }
+
+    .diagnosis-badge {
+      padding: 4px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      color: white;
+    }
+
+    .diagnosis-appendicitis { background: #dc2626; }
+    .diagnosis-hernia { background: #ea580c; }
+    .diagnosis-cholecystitis { background: #d97706; }
+    .diagnosis-pancreatitis { background: #ca8a04; }
+    .diagnosis-ulcer { background: #65a30d; }
+    .diagnosis-obstruction { background: #0891b2; }
+    .diagnosis-peritonitis { background: #7c3aed; }
+
+    .medical-record {
+      background: #f1f5f9;
+      padding: 10px;
+      border-radius: 6px;
+      margin: 5px 0;
+      font-size: 12px;
+    }
+
+    .prescription {
+      background: #ecfdf5;
+      border-left: 3px solid #10b981;
+      padding: 8px;
+      margin: 4px 0;
+      font-size: 12px;
+    }
+
+    .visit-note {
+      background: #fef3c7;
+      border-left: 3px solid #f59e0b;
+      padding: 8px;
+      margin: 4px 0;
+      font-size: 12px;
+    }
+
+    .surgery-note {
+      background: #fce7f3;
+      border-left: 3px solid #ec4899;
+      padding: 8px;
+      margin: 4px 0;
+      font-size: 12px;
+    }
+
+    .student-question {
+      background: #e0f2fe;
+      border-left: 3px solid #0284c7;
+      padding: 10px;
+      margin: 6px 0;
+      font-size: 13px;
+    }
+
+    .question-category {
+      font-weight: 600;
+      color: #0c4a6e;
+      margin-bottom: 4px;
+    }
+
+    .loading {
+      display: none;
+      text-align: center;
+      padding: 40px;
+      color: #64748b;
+    }
+
+    .loading.show {
+      display: block;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: #e2e8f0;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 10px 0;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: #dc2626;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #64748b;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      margin-bottom: 10px;
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+    }
+
+    .modal-content {
+      background-color: white;
+      margin: 5% auto;
+      padding: 30px;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 900px;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover {
+      color: #000;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .dashboard {
+        grid-template-columns: 1fr;
+      }
+
+      .search-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏥 Indian Surgical Emergency Patients Generator</h1>
+      <p>Generate comprehensive synthetic data for acute surgical conditions in Indian medical settings</p>
+      <div class="version-badge">v2.2 - Indian Medical Edition</div>
+      <div style="margin-top: 15px;">
+        <span class="surgical-badge">Appendicitis</span>
+        <span class="surgical-badge">Inguinal Hernia</span>
+        <span class="surgical-badge">Cholecystitis</span>
+        <span class="surgical-badge">Pancreatitis</span>
+        <span class="surgical-badge">Perforated Ulcer</span>
+        <span class="surgical-badge">Bowel Obstruction</span>
+        <span class="surgical-badge">Peritonitis</span>
+      </div>
+    </div>
+
+    <div class="controls">
+      <h3>🔧 Generation Parameters</h3>
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="patientCount">Number of Patients</label>
+          <input type="number" id="patientCount" min="1" max="1000" value="10">
+        </div>
+        <div class="form-group">
+          <label for="ageRange">Age Range</label>
+          <select id="ageRange">
+            <option value="all">All Ages (18-85)</option>
+            <option value="young">Young Adults (18-35)</option>
+            <option value="middle">Middle Age (36-60)</option>
+            <option value="elderly">Elderly (60+)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="gender">Gender Distribution</label>
+          <select id="gender">
+            <option value="mixed">Mixed</option>
+            <option value="male">Male Only</option>
+            <option value="female">Female Only</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="severity">Case Severity</label>
+          <select id="severity">
+            <option value="mixed">Mixed Severity</option>
+            <option value="mild">Mild Cases</option>
+            <option value="moderate">Moderate Cases</option>
+            <option value="severe">Severe Cases</option>
+          </select>
+        </div>
+      </div>
+      <div class="buttons">
+        <button class="btn btn-primary" onclick="generatePatients()">
+          <span>🏥</span> Generate Surgical Patients
+        </button>
+        <button class="btn btn-secondary" onclick="clearResults()">
+          <span>🗑️</span> Clear Results
+        </button>
+        <button class="btn btn-export" onclick="exportData('csv')" disabled id="exportCsvBtn">
+          <span>📊</span> Export CSV
+        </button>
+        <button class="btn btn-export" onclick="exportData('json')" disabled id="exportJsonBtn">
+          <span>💾</span> Export JSON
+        </button>
+      </div>
+    </div>
+
+    <div class="dashboard" id="dashboard" style="display: none;">
+      <div class="chart-container">
+        <h4>📊 Age Distribution</h4>
+        <canvas id="ageChart"></canvas>
+      </div>
+      <div class="chart-container">
+        <h4>🩺 Surgical Diagnoses</h4>
+        <canvas id="diagnosisChart"></canvas>
+      </div>
+    </div>
+
+    <div class="search-filter" id="searchFilter" style="display: none;">
+      <div class="search-grid">
+        <input type="text" class="search-input" id="searchInput" placeholder="Search patients by name, diagnosis, or any field...">
+        <select id="filterDiagnosis">
+          <option value="">All Diagnoses</option>
+        </select>
+        <button class="btn btn-secondary" onclick="clearFilters()">Clear Filters</button>
+      </div>
+    </div>
+
+    <div class="results" id="results">
+      <div class="empty-state">
+        <h3>No surgical patients generated yet</h3>
+        <p>Configure your parameters and click "Generate Surgical Patients" to create realistic surgical case data</p>
+      </div>
+    </div>
+
+    <div class="loading" id="loading">
+      <h3>Generating surgical patients...</h3>
+      <p id="loadingText">Please wait while we create realistic surgical case data</p>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <p id="progressText">0%</p>
+    </div>
+  </div>
+
+  <!-- Patient Detail Modal -->
+  <div id="patientModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <div id="patientDetail"></div>
+    </div>
+  </div>
+
+  <script>
+    // Enhanced data arrays for Indian medical settings
+    const firstNames = {
+      male: ['Raj', 'Amit', 'Suresh', 'Vikram', 'Ravi', 'Kumar', 'Anil', 'Sanjay', 'Deepak', 'Manoj', 'Ashok', 'Ramesh', 'Vinod', 'Prakash', 'Ajay', 'Rohit', 'Arjun', 'Kiran', 'Mahesh', 'Naveen', 'Pradeep', 'Santosh', 'Raghav', 'Ankit', 'Gaurav'],
+      female: ['Priya', 'Sunita', 'Kavita', 'Meera', 'Sita', 'Asha', 'Pooja', 'Neeta', 'Rekha', 'Geeta', 'Anita', 'Maya', 'Shanti', 'Lata', 'Usha', 'Nisha', 'Seema', 'Renu', 'Kiran', 'Shweta', 'Deepika', 'Aarti', 'Ritu', 'Sapna', 'Nidhi']
+    };
+
+    const lastNames = ['Sharma', 'Gupta', 'Singh', 'Kumar', 'Verma', 'Agarwal', 'Jain', 'Yadav', 'Mishra', 'Tiwari', 'Pandey', 'Shukla', 'Srivastava', 'Chaudhary', 'Thakur', 'Bansal', 'Saxena', 'Joshi', 'Agrawal', 'Malhotra', 'Kapoor', 'Arora', 'Mehta', 'Shah', 'Patel', 'Reddy', 'Rao', 'Nair', 'Iyer', 'Pillai'];
+
+    // Indian cities
+    const indianCities = ['Delhi', 'Mumbai', 'Bangalore', 'Chennai', 'Kolkata', 'Hyderabad', 'Pune', 'Ahmedabad', 'Jaipur', 'Lucknow', 'Kanpur', 'Nagpur', 'Indore', 'Bhopal', 'Visakhapatnam', 'Patna', 'Vadodara', 'Ludhiana', 'Coimbatore', 'Kochi', 'Thiruvananthapuram', 'Guwahati', 'Chandigarh', 'Dehradun', 'Raipur'];
+
+    // Indian area/locality names
+    const areaNames = ['Sector', 'Block', 'Phase', 'Colony', 'Nagar', 'Vihar', 'Park', 'Gardens', 'Enclave', 'Extension'];
+    const roadNames = ['Road', 'Marg', 'Lane', 'Street', 'Avenue', 'Path'];
+
+    // Specific surgical diagnoses
+    const surgicalDiagnoses = [
+      { name: 'Acute Appendicitis', code: 'K35.9', severity: ['mild', 'moderate', 'severe'] },
+      { name: 'Strangulated Inguinal Hernia', code: 'K40.4', severity: ['moderate', 'severe'] },
+      { name: 'Acute Cholecystitis', code: 'K80.0', severity: ['mild', 'moderate', 'severe'] },
+      { name: 'Acute Pancreatitis', code: 'K85.9', severity: ['moderate', 'severe'] },
+      { name: 'Perforated Ulcer', code: 'K25.1', severity: ['severe'] },
+      { name: 'Acute Intestinal Obstruction', code: 'K56.9', severity: ['moderate', 'severe'] },
+      { name: 'Peritonitis', code: 'K65.9', severity: ['severe'] }
+    ];
+
+    // Student questions by diagnosis for medical education
+    const studentQuestions = {
+      'Acute Appendicitis': [
+        { category: 'History Taking', question: 'What is the typical pain progression in acute appendicitis?' },
+        { category: 'Physical Examination', question: 'Demonstrate McBurney\'s point and describe its significance.' },
+        { category: 'Differential Diagnosis', question: 'What conditions should be considered in a young female with RIF pain?' },
+        { category: 'Investigations', question: 'When would you order a CT scan vs ultrasound for suspected appendicitis?' },
+        { category: 'Management', question: 'What are the indications for laparoscopic vs open appendectomy?' }
+      ],
+      'Strangulated Inguinal Hernia': [
+        { category: 'History Taking', question: 'What symptoms distinguish strangulated from incarcerated hernia?' },
+        { category: 'Physical Examination', question: 'How do you assess for bowel viability in hernia examination?' },
+        { category: 'Pathophysiology', question: 'Explain the mechanism of strangulation in inguinal hernia.' },
+        { category: 'Emergency Management', question: 'What is the time-critical nature of strangulated hernia repair?' },
+        { category: 'Surgical Technique', question: 'Describe the key steps in emergency hernia repair with bowel assessment.' }
+      ],
+      'Acute Cholecystitis': [
+        { category: 'History Taking', question: 'What is Murphy\'s triad and its clinical significance?' },
+        { category: 'Physical Examination', question: 'Demonstrate Murphy\'s sign and explain its mechanism.' },
+        { category: 'Investigations', question: 'Compare the roles of ultrasound, HIDA scan, and MRCP in cholecystitis.' },
+        { category: 'Conservative Management', question: 'When is conservative treatment appropriate for acute cholecystitis?' },
+        { category: 'Surgical Timing', question: 'Discuss early vs delayed cholecystectomy in acute cholecystitis.' }
+      ],
+      'Acute Pancreatitis': [
+        { category: 'History Taking', question: 'What are the common causes of acute pancreatitis in India?' },
+        { category: 'Severity Assessment', question: 'Explain the Ranson criteria and APACHE II scoring.' },
+        { category: 'Investigations', question: 'When should lipase levels be measured vs amylase?' },
+        { category: 'Fluid Management', question: 'Describe the fluid resuscitation protocol in acute pancreatitis.' },
+        { category: 'Complications', question: 'What are the local and systemic complications of acute pancreatitis?' }
+      ],
+      'Perforated Ulcer': [
+        { category: 'History Taking', question: 'What is the classic presentation of perforated peptic ulcer?' },
+        { category: 'Physical Examination', question: 'Describe the abdominal findings in pneumoperitoneum.' },
+        { category: 'Investigations', question: 'What imaging studies confirm perforation and guide management?' },
+        { category: 'Emergency Surgery', question: 'Compare Graham patch vs definitive ulcer surgery.' },
+        { category: 'Post-operative Care', question: 'What are the key monitoring parameters after ulcer repair?' }
+      ],
+      'Acute Intestinal Obstruction': [
+        { category: 'History Taking', question: 'How do you differentiate small bowel from large bowel obstruction?' },
+        { category: 'Physical Examination', question: 'What are the classic signs of intestinal obstruction?' },
+        { category: 'Investigations', question: 'Interpret the X-ray findings in small bowel obstruction.' },
+        { category: 'Conservative Management', question: 'When is conservative management appropriate for bowel obstruction?' },
+        { category: 'Surgical Indications', question: 'What are the absolute indications for emergency surgery?' }
+      ],
+      'Peritonitis': [
+        { category: 'Pathophysiology', question: 'Explain the difference between primary and secondary peritonitis.' },
+        { category: 'Clinical Assessment', question: 'How do you assess the severity of peritonitis?' },
+        { category: 'Source Control', question: 'What constitutes adequate source control in peritonitis?' },
+        { category: 'Antibiotic Therapy', question: 'Describe empirical antibiotic selection for intra-abdominal infections.' },
+        { category: 'Surgical Management', question: 'When is damage control surgery indicated in severe peritonitis?' }
+      ]
+    };
+
+    // Surgical medications by condition (Indian brands/generics)
+    const surgicalMedications = {
+      'Acute Appendicitis': [
+        { name: 'Ceftriaxone', dose: '1g IV', frequency: 'BD', type: 'Antibiotic' },
+        { name: 'Metronidazole', dose: '500mg IV', frequency: 'TDS', type: 'Antibiotic' },
+        { name: 'Tramadol', dose: '50mg IV', frequency: 'SOS', type: 'Analgesic' }
+      ],
+      'Strangulated Inguinal Hernia': [
+        { name: 'Amoxicillin-Clavulanate', dose: '1.2g IV', frequency: 'TDS', type: 'Antibiotic' },
+        { name: 'Pentazocine', dose: '30mg IM', frequency: 'SOS', type: 'Analgesic' },
+        { name: 'Ondansetron', dose: '4mg IV', frequency: 'TDS', type: 'Antiemetic' }
+      ],
+      'Acute Cholecystitis': [
+        { name: 'Piperacillin-Tazobactam', dose: '4.5g IV', frequency: 'TDS', type: 'Antibiotic' },
+        { name: 'Diclofenac', dose: '75mg IM', frequency: 'BD', type: 'Analgesic' },
+        { name: 'Ursodeoxycholic acid', dose: '300mg', frequency: 'BD', type: 'Gallstone dissolution' }
+      ],
+      'Acute Pancreatitis': [
+        { name: 'Normal Saline', dose: '500ml', frequency: 'QID', type: 'Fluid therapy' },
+        { name: 'Pantoprazole', dose: '40mg IV', frequency: 'BD', type: 'PPI' },
+        { name: 'Octreotide', dose: '100mcg SC', frequency: 'TDS', type: 'Somatostatin analogue' }
+      ],
+      'Perforated Ulcer': [
+        { name: 'Meropenem', dose: '1g IV', frequency: 'TDS', type: 'Antibiotic' },
+        { name: 'Pantoprazole', dose: '80mg IV', frequency: 'BD', type: 'PPI' },
+        { name: 'Noradrenaline', dose: '0.1mcg/kg/min', frequency: 'Infusion', type: 'Vasopressor' }
+      ],
+      'Acute Intestinal Obstruction': [
+        { name: 'Ringer Lactate', dose: '500ml', frequency: 'QID', type: 'Fluid replacement' },
+        { name: 'Metoclopramide', dose: '10mg IV', frequency: 'TDS', type: 'Prokinetic' },
+        { name: 'Hyoscine', dose: '20mg IM', frequency: 'SOS', type: 'Antispasmodic' }
+      ],
+      'Peritonitis': [
+        { name: 'Vancomycin', dose: '1g IV', frequency: 'BD', type: 'Antibiotic' },
+        { name: 'Meropenem', dose: '2g IV', frequency: 'TDS', type: 'Antibiotic' },
+        { name: 'Midazolam', dose: '2mg IV', frequency: 'SOS', type: 'Sedation' }
+      ]
+    };
+
+    // Surgical procedures by condition
+    const surgicalProcedures = {
+      'Acute Appendicitis': ['Laparoscopic Appendectomy', 'Open Appendectomy', 'Interval Appendectomy'],
+      'Strangulated Inguinal Hernia': ['Emergency Hernia Repair with Mesh', 'Tension-free Hernioplasty', 'Bowel Resection with Hernia Repair'],
+      'Acute Cholecystitis': ['Laparoscopic Cholecystectomy', 'Open Cholecystectomy', 'Percutaneous Cholecystostomy'],
+      'Acute Pancreatitis': ['Conservative Management', 'ERCP with Sphincterotomy', 'Pancreatic Necrosectomy'],
+      'Perforated Ulcer': ['Graham Patch Repair', 'Truncal Vagotomy with Pyloroplasty', 'Billroth I/II Reconstruction'],
+      'Acute Intestinal Obstruction': ['Exploratory Laparotomy', 'Small Bowel Resection Anastomosis', 'Adhesiolysis'],
+      'Peritonitis': ['Exploratory Laparotomy with Peritoneal Lavage', 'Damage Control Surgery', 'Source Control with Stoma']
+    };
+
+    const insuranceProviders = ['Government Health Scheme', 'ESI', 'CGHS', 'Ayushman Bharat', 'Private Insurance', 'Self-Pay', 'Medical Trust', 'Corporate Health Plan'];
+
+    let generatedPatients = [];
+    let filteredPatients = [];
+    let ageChart, diagnosisChart;
+
+    function getRandomElement(array) {
+      return array[Math.floor(Math.random() * array.length)];
+    }
+
+    function getRandomElements(array, count) {
+      const shuffled = [...array].sort(() => 0.5 - Math.random());
+      return shuffled.slice(0, count);
+    }
+
+    function getRandomAge(range) {
+      switch (range) {
+        case 'young': return Math.floor(Math.random() * 18) + 18;
+        case 'middle': return Math.floor(Math.random() * 25) + 36;
+        case 'elderly': return Math.floor(Math.random() * 25) + 60;
+        default: return Math.floor(Math.random() * 68) + 18; // 18-85
+      }
+    }
+
+    function getRandomGender(preference) {
+      if (preference === 'male') return 'Male';
+      if (preference === 'female') return 'Female';
+      return Math.random() > 0.5 ? 'Male' : 'Female';
+    }
+
+    function generateIndianAddress() {
+      const houseNumber = Math.floor(Math.random() * 999) + 1;
+      const area = getRandomElement(areaNames);
+      const areaNumber = Math.floor(Math.random() * 50) + 1;
+      const roadType = getRandomElement(roadNames);
+      return `${houseNumber}, ${area} ${areaNumber}, ${roadType}`;
+    }
+
+    function getSurgicalDiagnosis(severity) {
+      let eligibleDiagnoses = surgicalDiagnoses;
+      if (severity !== 'mixed') {
+        eligibleDiagnoses = surgicalDiagnoses.filter(d => d.severity.includes(severity));
+      }
+      return getRandomElement(eligibleDiagnoses);
+    }
+
+    function generateSurgicalVitals(age, diagnosis, severity) {
+      // Temperature in Celsius
+      const baseTemp = severity === 'severe' ? 38.6 : severity === 'moderate' ? 37.7 : 36.8;
+      const baseBP = severity === 'severe' ? 90 : severity === 'moderate' ? 110 : 120;
+      const baseHR = severity === 'severe' ? 120 : severity === 'moderate' ? 100 : 80;
+
+      return {
+        temperature: (baseTemp + (Math.random() - 0.5) * 2).toFixed(1),
+        bloodPressure: `${baseBP + Math.floor(Math.random() * 30 - 15)}/${70 + Math.floor(Math.random() * 20 - 10)}`,
+        heartRate: baseHR + Math.floor(Math.random() * 30 - 15),
+        weight: Math.floor(Math.random() * 40) + 45, // 45-85 kg
+        height: Math.floor(Math.random() * 25) + 155, // 155-180 cm
+        oxygenSat: severity === 'severe' ? 92 + Math.floor(Math.random() * 6) : 96 + Math.floor(Math.random() * 4),
+        respiratoryRate: severity === 'severe' ? 20 + Math.floor(Math.random() * 8) : 14 + Math.floor(Math.random() * 6),
+        painScore: severity === 'severe' ? 8 + Math.floor(Math.random() * 3) : severity === 'moderate' ? 5 + Math.floor(Math.random() * 4) : 2 + Math.floor(Math.random() * 4)
+      };
+    }
+
+    function generateSurgicalMedicalRecords(diagnosis, severity, age) {
+      const diagnosisName = diagnosis.name;
+      const medications = surgicalMedications[diagnosisName] || [];
+      const procedures = surgicalProcedures[diagnosisName] || [];
+      const questions = studentQuestions[diagnosisName] || [];
+
+      const records = {
+        prescriptions: [],
+        visitHistory: [],
+        surgicalHistory: [],
+        labResults: generateSurgicalLabResults(diagnosis, severity),
+        allergies: [],
+        studentQuestions: questions
+      };
+
+      // Generate prescriptions based on diagnosis
+      medications.forEach(med => {
+        if (Math.random() > 0.3) { // 70% chance of each medication
+          records.prescriptions.push({
+            medication: med.name,
+            dosage: med.dose,
+            frequency: med.frequency,
+            type: med.type,
+            prescribedDate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+          });
+        }
+      });
+
+      // Generate surgical procedure
+      if (Math.random() > 0.2) { // 80% have had or will have surgery
+        records.surgicalHistory.push({
+          procedure: getRandomElement(procedures),
+          date: Math.random() > 0.6 ?
+            new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0] :
+            'Scheduled',
+          surgeon: `Dr. ${getRandomElement(lastNames)}`,
+          outcome: Math.random() > 0.1 ? 'Successful' : 'Complicated',
+          notes: generateSurgicalNotes(diagnosisName, severity)
+        });
+      }
+
+      // Generate visit history
+      const visitCount = Math.floor(Math.random() * 3) + 2;
+      for (let i = 0; i < visitCount; i++) {
+        records.visitHistory.push({
+          date: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          type: getRandomElement(['Emergency Department', 'Surgical OPD', 'Pre-operative Assessment', 'Post-operative Follow-up']),
+          notes: generateVisitNote(diagnosisName, severity),
+          provider: `Dr. ${getRandomElement(lastNames)}`,
+          department: getRandomElement(['Emergency Medicine', 'General Surgery', 'Gastroenterology'])
+        });
+      }
+
+      // Generate allergies
+      if (Math.random() > 0.7) {
+        const allergyTypes = ['Penicillin', 'Sulfa drugs', 'Latex', 'Contrast dye', 'NSAIDs', 'Iodine'];
+        records.allergies = getRandomElements(allergyTypes, Math.floor(Math.random() * 2) + 1);
+      }
+
+      return records;
+    }
+
+    function generateSurgicalNotes(diagnosis, severity) {
+      const notes = {
+        'Acute Appendicitis': [
+          `${severity} appendicitis ${severity === 'severe' ? 'with perforation and localized abscess' : 'with minimal peritoneal irritation'}. Laparoscopic appendectomy completed successfully.`,
+          `Post-operative recovery uneventful. Patient started on oral feeds POD-1. Ambulatory without difficulty.`,
+          `Minimal complications noted. Discharged on post-operative day ${severity === 'severe' ? '4' : '2'} with oral antibiotics.`
+        ],
+        'Strangulated Inguinal Hernia': [
+          `Emergency repair of strangulated right inguinal hernia. Bowel viability restored after release. Polypropylene mesh repair performed.`,
+          `Post-operative course ${severity === 'severe' ? 'complicated by superficial wound infection' : 'uncomplicated'}. Prophylactic antibiotics continued.`,
+          `Good surgical outcome. Patient counseled on activity restrictions and follow-up care.`
+        ],
+        'Acute Cholecystitis': [
+          `${severity} cholecystitis ${severity === 'severe' ? 'with pericholecystic fluid collection' : 'with gallbladder wall thickening'}. Laparoscopic cholecystectomy performed successfully.`,
+          `Post-operative nausea controlled with antiemetics. Clear liquids started POD-1, progressed to regular diet.`,
+          `Histopathology confirms chronic cholecystitis with acute inflammation. Recovery satisfactory.`
+        ]
+      };
+
+      return getRandomElement(notes[diagnosis] || ['Standard surgical procedure performed with good outcome.']);
+    }
+
+    function generateVisitNote(diagnosis, severity) {
+      const notes = {
+        'Acute Appendicitis': [
+          `Patient presents with ${severity} right iliac fossa pain, nausea, and low-grade fever. McBurney's point tenderness positive with rebound tenderness.`,
+          `CECT abdomen confirms appendicitis ${severity === 'severe' ? 'with perforation and fluid collection' : 'with appendiceal wall thickening'}.`,
+          `Pre-operative workup completed. Patient kept NBM and started on IV antibiotics as per protocol.`
+        ],
+        'Strangulated Inguinal Hernia': [
+          `Patient reports sudden onset of severe groin pain with irreducible swelling. Associated nausea and vomiting.`,
+          `Clinical examination reveals tender, firm inguinal mass with signs of bowel obstruction. Emergency surgical consultation obtained.`,
+          `Patient prepared for immediate surgical intervention. Consent obtained for hernia repair ± bowel resection.`
+        ],
+        'Acute Cholecystitis': [
+          `Patient with ${severity} right hypochondriac pain, positive Murphy's sign. USG shows gallbladder wall thickening and pericholecystic fluid.`,
+          `HIDA scan confirms acute cholecystitis. Started on antibiotics, analgesics, and conservative management initially.`,
+          `Surgical consultation for laparoscopic cholecystectomy. Patient and family counseled regarding procedure and risks.`
+        ]
+      };
+
+      return getRandomElement(notes[diagnosis] || [`Patient being managed for ${diagnosis} as per standard treatment protocols.`]);
+    }
+
+    function generateSurgicalLabResults(diagnosis, severity) {
+      const baseWBC = severity === 'severe' ? 18000 : severity === 'moderate' ? 14000 : 10000;
+      const baseLactate = severity === 'severe' ? 4.0 : severity === 'moderate' ? 2.5 : 1.2;
+
+      return {
+        whiteBloodCells: (baseWBC + Math.random() * 5000 - 2500).toFixed(0),
+        neutrophils: (70 + Math.random() * 20).toFixed(1),
+        lactate: (baseLactate + Math.random() * 1.0 - 0.5).toFixed(1),
+        creatinine: (0.8 + Math.random() * 0.8).toFixed(1),
+        lipase: diagnosis.name === 'Acute Pancreatitis' ? Math.floor(Math.random() * 1000) + 300 : Math.floor(Math.random() * 100) + 20,
+        bilirubin: diagnosis.name === 'Acute Cholecystitis' ? (Math.random() * 4 + 1).toFixed(1) : (Math.random() * 1.2).toFixed(1),
+        hemoglobin: (10 + Math.random() * 6).toFixed(1),
+        lastUpdated: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+      };
+    }
+
+    function generateSurgicalPatient(ageRange, genderPref, severity) {
+      const gender = getRandomGender(genderPref);
+      const age = getRandomAge(ageRange);
+      const firstName = getRandomElement(firstNames[gender.toLowerCase()]);
+      const lastName = getRandomElement(lastNames);
+      const diagnosis = getSurgicalDiagnosis(severity);
+      const caseSeverity = severity === 'mixed' ? getRandomElement(['mild', 'moderate', 'severe']) : severity;
+      const vitals = generateSurgicalVitals(age, diagnosis, caseSeverity);
+      const medicalRecords = generateSurgicalMedicalRecords(diagnosis, caseSeverity, age);
+
+      return {
+        id: Math.random().toString(36).substr(2, 9).toUpperCase(),
+        name: `${firstName} ${lastName}`,
+        firstName,
+        lastName,
+        age: age,
+        gender: gender,
+        city: getRandomElement(indianCities),
+        address: generateIndianAddress(),
+        phone: `+91 ${Math.floor(Math.random() * 9000000000) + 1000000000}`,
+        email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}@email.com`,
+        diagnosis: diagnosis.name,
+        diagnosisCode: diagnosis.code,
+        severity: caseSeverity,
+        insurance: getRandomElement(insuranceProviders),
+        temperature: vitals.temperature + '°C',
+        bloodPressure: vitals.bloodPressure + ' mmHg',
+        heartRate: vitals.heartRate + ' bpm',
+        weight: vitals.weight + ' kg',
+        height: vitals.height + ' cm',
+        oxygenSat: vitals.oxygenSat + '%',
+        respiratoryRate: vitals.respiratoryRate + '/min',
+        painScore: vitals.painScore + '/10',
+        medicalRecords: medicalRecords,
+        admissionDate: new Date(Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        createdDate: new Date().toISOString().split('T')[0]
+      };
+    }
+
+    async function generatePatients() {
+      const count = parseInt(document.getElementById('patientCount').value);
+      const ageRange = document.getElementById('ageRange').value;
+      const gender = document.getElementById('gender').value;
+      const severity = document.getElementById('severity').value;
+
+      if (count < 1 || count > 1000) {
+        alert('Please enter a number between 1 and 1000');
+        return;
+      }
+
+      document.getElementById('loading').classList.add('show');
+      document.getElementById('results').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('searchFilter').style.display = 'none';
+
+      const batchSize = 50;
+      const batches = Math.ceil(count / batchSize);
+      generatedPatients = [];
+
+      for (let batch = 0; batch < batches; batch++) {
+        const batchStart = batch * batchSize;
+        const batchEnd = Math.min(batchStart + batchSize, count);
+        const batchCount = batchEnd - batchStart;
+
+        document.getElementById('loadingText').textContent =
+          `Generating surgical case batch ${batch + 1} of ${batches} (${batchCount} patients)...`;
+
+        for (let i = 0; i < batchCount; i++) {
+          generatedPatients.push(generateSurgicalPatient(ageRange, gender, severity));
+          const progress = ((batchStart + i + 1) / count) * 100;
+          document.getElementById('progressFill').style.width = progress + '%';
+          document.getElementById('progressText').textContent = Math.round(progress) + '%';
+        }
+
+        // Allow UI to update
+        await new Promise(resolve => setTimeout(resolve, 10));
+      }
+
+      filteredPatients = [...generatedPatients];
+      displayResults();
+      createCharts();
+      setupFilters();
+
+      document.getElementById('loading').classList.remove('show');
+      document.getElementById('results').style.display = 'block';
+      document.getElementById('dashboard').style.display = 'grid';
+      document.getElementById('searchFilter').style.display = 'block';
+      document.getElementById('exportCsvBtn').disabled = false;
+      document.getElementById('exportJsonBtn').disabled = false;
+    }
+
+    function getDiagnosisBadgeClass(diagnosis) {
+      const classMap = {
+        'Acute Appendicitis': 'diagnosis-appendicitis',
+        'Strangulated Inguinal Hernia': 'diagnosis-hernia',
+        'Acute Cholecystitis': 'diagnosis-cholecystitis',
+        'Acute Pancreatitis': 'diagnosis-pancreatitis',
+        'Perforated Ulcer': 'diagnosis-ulcer',
+        'Acute Intestinal Obstruction': 'diagnosis-obstruction',
+        'Peritonitis': 'diagnosis-peritonitis'
+      };
+      return classMap[diagnosis] || 'diagnosis-appendicitis';
+    }
+
+    function displayResults() {
+      const resultsDiv = document.getElementById('results');
+
+      if (filteredPatients.length === 0) {
+        resultsDiv.innerHTML = `
+          <div class="empty-state">
+            <h3>No surgical patients match your search criteria</h3>
+            <p>Try adjusting your search terms or filters</p>
+          </div>
+        `;
+        return;
+      }
+
+      let tableHTML = `
+        <div class="results-header">
+          <h3>🏥 Surgical Patients</h3>
+          <span class="patient-count">${filteredPatients.length} cases</span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>Patient ID</th>
+                <th>Name</th>
+                <th>Age</th>
+                <th>Gender</th>
+                <th>Diagnosis</th>
+                <th>Severity</th>
+                <th>Temperature</th>
+                <th>BP</th>
+                <th>Pain Score</th>
+                <th>City</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+      `;
+
+      filteredPatients.forEach(patient => {
+        tableHTML += `
+          <tr>
+            <td>${patient.id}</td>
+            <td>${patient.name}</td>
+            <td>${patient.age}</td>
+            <td>${patient.gender}</td>
+            <td><span class="diagnosis-badge ${getDiagnosisBadgeClass(patient.diagnosis)}">${patient.diagnosis}</span></td>
+            <td>${patient.severity}</td>
+            <td>${patient.temperature}</td>
+            <td>${patient.bloodPressure}</td>
+            <td>${patient.painScore}</td>
+            <td>${patient.city}</td>
+            <td><button class="btn btn-secondary" onclick="viewPatient('${patient.id}')">View Details</button></td>
+          </tr>
+        `;
+      });
+
+      tableHTML += `
+            </tbody>
+          </table>
+        </div>
+      `;
+
+      resultsDiv.innerHTML = tableHTML;
+    }
+
+    function viewPatient(patientId) {
+      const patient = generatedPatients.find(p => p.id === patientId);
+      if (!patient) return;
+
+      let detailHTML = `
+        <h2>🏥 Surgical Patient: ${patient.name}</h2>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 20px 0;">
+          <div>
+            <h3>📋 Patient Information</h3>
+            <p><strong>ID:</strong> ${patient.id}</p>
+            <p><strong>Name:</strong> ${patient.name}</p>
+            <p><strong>Age:</strong> ${patient.age} years</p>
+            <p><strong>Gender:</strong> ${patient.gender}</p>
+            <p><strong>Address:</strong> ${patient.address}, ${patient.city}</p>
+            <p><strong>Phone:</strong> ${patient.phone}</p>
+            <p><strong>Email:</strong> ${patient.email}</p>
+            <p><strong>Insurance:</strong> ${patient.insurance}</p>
+            <p><strong>Admission Date:</strong> ${patient.admissionDate}</p>
+          </div>
+          <div>
+            <h3>🩺 Clinical Data</h3>
+            <p><strong>Diagnosis:</strong> <span class="diagnosis-badge ${getDiagnosisBadgeClass(patient.diagnosis)}">${patient.diagnosis}</span></p>
+            <p><strong>ICD-10:</strong> ${patient.diagnosisCode}</p>
+            <p><strong>Severity:</strong> ${patient.severity}</p>
+            <p><strong>Temperature:</strong> ${patient.temperature}</p>
+            <p><strong>Blood Pressure:</strong> ${patient.bloodPressure}</p>
+            <p><strong>Heart Rate:</strong> ${patient.heartRate}</p>
+            <p><strong>O2 Saturation:</strong> ${patient.oxygenSat}</p>
+            <p><strong>Respiratory Rate:</strong> ${patient.respiratoryRate}</p>
+            <p><strong>Pain Score:</strong> ${patient.painScore}</p>
+            <p><strong>Weight:</strong> ${patient.weight}</p>
+            <p><strong>Height:</strong> ${patient.height}</p>
+          </div>
+        </div>
+      `;
+
+      if (patient.medicalRecords) {
+        // Student Questions Section
+        if (patient.medicalRecords.studentQuestions.length > 0) {
+          detailHTML += `
+            <h3>🎓 Student Questions for Clinical Learning</h3>
+          `;
+          patient.medicalRecords.studentQuestions.forEach(question => {
+            detailHTML += `
+              <div class="student-question">
+                <div class="question-category">${question.category}:</div>
+                ${question.question}
+              </div>
+            `;
+          });
+        }
+
+        detailHTML += `
+          <h3>💊 Current Medications</h3>
+        `;
+
+        patient.medicalRecords.prescriptions.forEach(rx => {
+          detailHTML += `
+            <div class="prescription">
+              <strong>${rx.medication}</strong> - ${rx.dosage} ${rx.frequency}<br>
+              <small>Type: ${rx.type} | Prescribed: ${rx.prescribedDate}</small>
+            </div>
+          `;
+        });
+
+        if (patient.medicalRecords.surgicalHistory.length > 0) {
+          detailHTML += `<h3>🔪 Surgical History</h3>`;
+          patient.medicalRecords.surgicalHistory.forEach(surgery => {
+            detailHTML += `
+              <div class="surgery-note">
+                <strong>${surgery.procedure}</strong> - ${surgery.date}<br>
+                <small>Surgeon: ${surgery.surgeon} | Outcome: ${surgery.outcome}</small><br>
+                ${surgery.notes}
+              </div>
+            `;
+          });
+        }
+
+        detailHTML += `<h3>🏥 Visit History</h3>`;
+        patient.medicalRecords.visitHistory.forEach(visit => {
+          detailHTML += `
+            <div class="visit-note">
+              <strong>${visit.type}</strong> - ${visit.date}<br>
+              <small>Provider: ${visit.provider} | Department: ${visit.department}</small><br>
+              ${visit.notes}
+            </div>
+          `;
+        });
+
+        if (patient.medicalRecords.allergies.length > 0) {
+          detailHTML += `
+            <h3>⚠️ Known Allergies</h3>
+            <p style="color: #dc2626; font-weight: 600;">${patient.medicalRecords.allergies.join(', ')}</p>
+          `;
+        }
+
+        if (patient.medicalRecords.labResults) {
+          const lab = patient.medicalRecords.labResults;
+          detailHTML += `
+            <h3>🧪 Recent Laboratory Results (${lab.lastUpdated})</h3>
+            <div class="medical-record">
+              <p><strong>WBC Count:</strong> ${lab.whiteBloodCells} /μL</p>
+              <p><strong>Neutrophils:</strong> ${lab.neutrophils}%</p>
+              <p><strong>Hemoglobin:</strong> ${lab.hemoglobin} g/dL</p>
+              <p><strong>Serum Lactate:</strong> ${lab.lactate} mmol/L</p>
+              <p><strong>Serum Creatinine:</strong> ${lab.creatinine} mg/dL</p>
+              <p><strong>Lipase:</strong> ${lab.lipase} U/L</p>
+              <p><strong>Total Bilirubin:</strong> ${lab.bilirubin} mg/dL</p>
+            </div>
+          `;
+        }
+      }
+
+      document.getElementById('patientDetail').innerHTML = detailHTML;
+      document.getElementById('patientModal').style.display = 'block';
+    }
+
+    function closeModal() {
+      document.getElementById('patientModal').style.display = 'none';
+    }
+
+    function createCharts() {
+      if (!generatedPatients.length) return;
+
+      // Age distribution chart
+      const ageGroups = { '18-30': 0, '31-45': 0, '46-60': 0, '61-75': 0, '75+': 0 };
+      generatedPatients.forEach(patient => {
+        const age = patient.age;
+        if (age <= 30) ageGroups['18-30']++;
+        else if (age <= 45) ageGroups['31-45']++;
+        else if (age <= 60) ageGroups['46-60']++;
+        else if (age <= 75) ageGroups['61-75']++;
+        else ageGroups['75+']++;
+      });
+
+      const ageCtx = document.getElementById('ageChart').getContext('2d');
+      if (ageChart) ageChart.destroy();
+      ageChart = new Chart(ageCtx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(ageGroups),
+          datasets: [{
+            label: 'Number of Patients',
+            data: Object.values(ageGroups),
+            backgroundColor: '#dc2626'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+
+      // Diagnosis chart
+      const diagnosisCounts = {};
+      generatedPatients.forEach(patient => {
+        const diagnosis = patient.diagnosis;
+        diagnosisCounts[diagnosis] = (diagnosisCounts[diagnosis] || 0) + 1;
+      });
+
+      const diagnosisCtx = document.getElementById('diagnosisChart').getContext('2d');
+      if (diagnosisChart) diagnosisChart.destroy();
+      diagnosisChart = new Chart(diagnosisCtx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(diagnosisCounts),
+          datasets: [{
+            data: Object.values(diagnosisCounts),
+            backgroundColor: [
+              '#dc2626', '#ea580c', '#d97706', '#ca8a04',
+              '#65a30d', '#0891b2', '#7c3aed'
+            ]
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { position: 'bottom' }
+          }
+        }
+      });
+    }
+
+    function setupFilters() {
+      const diagnosisFilter = document.getElementById('filterDiagnosis');
+      const uniqueDiagnoses = [...new Set(generatedPatients.map(p => p.diagnosis))].sort();
+
+      diagnosisFilter.innerHTML = '<option value="">All Diagnoses</option>';
+      uniqueDiagnoses.forEach(diagnosis => {
+        diagnosisFilter.innerHTML += `<option value="${diagnosis}">${diagnosis}</option>`;
+      });
+
+      // Setup search functionality
+      document.getElementById('searchInput').addEventListener('input', filterPatients);
+      diagnosisFilter.addEventListener('change', filterPatients);
+    }
+
+    function filterPatients() {
+      const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+      const diagnosisFilter = document.getElementById('filterDiagnosis').value;
+
+      filteredPatients = generatedPatients.filter(patient => {
+        const matchesSearch = !searchTerm ||
+          Object.values(patient).some(value =>
+            String(value).toLowerCase().includes(searchTerm)
+          );
+
+        const matchesDiagnosis = !diagnosisFilter || patient.diagnosis === diagnosisFilter;
+
+        return matchesSearch && matchesDiagnosis;
+      });
+
+      displayResults();
+    }
+
+    function clearFilters() {
+      document.getElementById('searchInput').value = '';
+      document.getElementById('filterDiagnosis').value = '';
+      filteredPatients = [...generatedPatients];
+      displayResults();
+    }
+
+    function clearResults() {
+      generatedPatients = [];
+      filteredPatients = [];
+      displayResults();
+      document.getElementById('dashboard').style.display = 'none';
+      document.getElementById('searchFilter').style.display = 'none';
+      document.getElementById('exportCsvBtn').disabled = true;
+      document.getElementById('exportJsonBtn').disabled = true;
+
+      if (ageChart) ageChart.destroy();
+      if (diagnosisChart) diagnosisChart.destroy();
+    }
+
+    function exportData(format) {
+      if (filteredPatients.length === 0) {
+        alert('No data to export. Generate patients first.');
+        return;
+      }
+
+      const timestamp = new Date().toISOString().split('T')[0];
+
+      if (format === 'csv') {
+        const headers = ['ID', 'Name', 'Age', 'Gender', 'Diagnosis', 'ICD-10', 'Severity', 'City', 'Address', 'Phone', 'Insurance', 'Temperature', 'Blood Pressure', 'Heart Rate', 'Weight', 'Height', 'Pain Score', 'Admission Date'];
+        let csvContent = headers.join(',') + '\n';
+
+        filteredPatients.forEach(patient => {
+          const row = [
+            patient.id,
+            `"${patient.name}"`,
+            patient.age,
+            patient.gender,
+            `"${patient.diagnosis}"`,
+            patient.diagnosisCode,
+            patient.severity,
+            `"${patient.city}"`,
+            `"${patient.address}"`,
+            `"${patient.phone}"`,
+            `"${patient.insurance}"`,
+            patient.temperature,
+            `"${patient.bloodPressure}"`,
+            patient.heartRate,
+            patient.weight,
+            patient.height,
+            patient.painScore,
+            patient.admissionDate
+          ];
+          csvContent += row.join(',') + '\n';
+        });
+
+        downloadFile(csvContent, `indian_surgical_patients_${timestamp}.csv`, 'text/csv');
+      } else if (format === 'json') {
+        const jsonContent = JSON.stringify(filteredPatients, null, 2);
+        downloadFile(jsonContent, `indian_surgical_patients_${timestamp}.json`, 'application/json');
+      }
+    }
+
+    function downloadFile(content, filename, mimeType) {
+      const blob = new Blob([content], { type: mimeType + ';charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', filename);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    // Initialize the app
+    document.addEventListener('DOMContentLoaded', function() {
+      displayResults();
+
+      // Close modal when clicking outside
+      window.onclick = function(event) {
+        if (event.target == document.getElementById('patientModal')) {
+          closeModal();
+        }
+      }
+    });
+  </script>
+</body>
+
+</html>
